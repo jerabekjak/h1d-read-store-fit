@@ -114,3 +114,21 @@ InvResults$methods(
 )
 
 
+
+# which_ :: which rows should be used fot the barplot
+#           preferable row with the same parameters
+InvResults$methods(
+  barplots = function(which_, ...)
+  {
+    pars = .self$final_pars[which_,]
+    n = length(which_)
+    yr = range(pars$V4, pars$V5)
+    bp = barplot(pars$V2, main = pars$V1[1], ylim = yr, ...,
+                 names.arg = paste('material', 1:length(pars$V1)))
+    for (i in 1:n)
+    {
+      lines(rep(bp[i,],2), c(pars$V4[i], pars$V5[i]))
+    }
+  }
+)
+
