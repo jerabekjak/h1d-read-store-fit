@@ -74,7 +74,6 @@ InvResults$methods(
 
     final_pars = function(project_)
     {
-      init = INIT
       final = c()
       file_ = paste(project_, 'Fit.out', sep = '/')
       fit = readLines(file_)
