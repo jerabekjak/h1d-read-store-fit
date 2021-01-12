@@ -167,8 +167,6 @@ InvResults$methods(
     pos = unique(om$Position)
     yr = range(om$Obs, om$Fitted)
     xr = range(om$Time)
-    par(mar = c(3,3,1,1))
-    par(cex = 1) #
     plot(NA, ylim = yr, xlim = xr)
     mtext('DAS', 1, 2)
     mtext('SWC', 2, 2)
