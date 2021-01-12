@@ -74,13 +74,13 @@ InvResults$methods(
 
     final_pars = function(project_)
     {
-      final = c()
       file_ = paste(project_, 'Fit.out', sep = '/')
       fit = readLines(file_)
       start.fit = which(grepl('Variable', fit))
       end.fit = which(grepl('Contributions', fit))
       nlines = end.fit - start.fit - 3
       pars = read.table(file_, skip = start.fit, nrows = nlines)
+      colnames(pars) <- c('Variable', 'Value', 'S.E.Coeff.', 'Lower', 'Upper')
       print (pars)
     }
 
@@ -121,13 +121,108 @@ InvResults$methods(
   {
     pars = .self$final_pars[which_,]
     n = length(which_)
-    yr = range(pars$V4, pars$V5)
-    bp = barplot(pars$V2, main = pars$V1[1], ylim = yr, ...,
-                 names.arg = paste('material', 1:length(pars$V1)))
+    yr = range(0, pars$Lower, pars$Upper)
+    bp = barplot(pars$Value, main = pars$Variable[1], ylim = yr, ...,
+                 names.arg = paste('material', 1:length(pars$Variable)))
     for (i in 1:n)
     {
-      lines(rep(bp[i,],2), c(pars$V4[i], pars$V5[i]))
+      lines(rep(bp[i,],2), c(pars$Lower[i], pars$Upper[i]))
     }
   }
+)
+
+
+
+InvResults$methods(
+  plot_bc = function()
+  {
+    bc = .self$bc
+    rr = range(bc$`sum(rTop)_[L]`, bc$`sum(rRoot)_[L]`,bc$`sum(vTop)_[L]`, bc$`sum(vBot)_[L]`,25)
+    plot(bc$`Time_[T]`, bc$`sum(rTop)_[L]`, cex=0.5, type='l', ylim = rr,
+         xlab = '', ylab = ''); grid()
+    lines(bc$`Time_[T]`, bc$`sum(vTop)_[L]`, cex=0.5, type='l', lty=2)
+    lines(bc$`Time_[T]`, bc$`sum(rRoot)_[L]`, cex=0.5, type='l', col=2)
+    lines(bc$`Time_[T]`, bc$`sum(vRoot)_[L]`, cex=0.5, type='l', col=2, lty=2)
+    lines(bc$`Time_[T]`, bc$`sum(RunOff)_[L]`, cex=0.5, type='l', col=3, lty=1)
+    lines(bc$`Time_[T]`, bc$`sum(vBot)_[L]`, cex=0.5, type='l', col=4, lty=1)
+    mtext('DAS', side = 1, line = 2)
+    mtext('cm', side = 2, line = 2)
+    legend('topleft', cex=0.8, 
+           legend = c('pot. top', 'act. top', 'pot. root uptake ', 'act. root update', 'sur. runoff', 'bottom act.'),
+           col = c(1,1,2,2,3,4), lty = c(1,2,1,2,1, 1), ncol = 3)
+    n = length(bc$`Time_[T]`)
+    dwater = -(bc$`sum(vTop)_[L]`[n] + bc$`sum(vRoot)_[L]`[n])
+    dwater = bc$`Volume_[L]`[length(bc$`Volume_[L]`)] - bc$`Volume_[L]`[1]
+    mtext(paste('water difference at the end of the perios [cm]:', dwater), 
+          side = 3, line = 0.5, adj = 0)
+  }
+)
+
+
+
+InvResults$methods(
+  plot_fit = function(d)
+  {
+    om = as.data.frame(.self$obs_mod)
+    pos = unique(om$Position)
+    yr = range(om$Obs, om$Fitted)
+    xr = range(om$Time)
+    par(mar = c(3,3,1,1))
+    par(cex = 1) #
+    plot(NA, ylim = yr, xlim = xr)
+    mtext('DAS', 1, 2)
+    mtext('SWC', 2, 2)
+    
+    for (i.pos in pos)
+    {
+      ii = which(om$Position==i.pos)
+      points(om$Time[ii], om$Obs[ii], col = i.pos, cex = 0.5)
+      lines(om$Time[ii], om$Fitted[ii], col=i.pos)
+    }
+    legend('topright', legend = pos, col = pos, lty = 1, cex=0.8)
+  }
+)
+
+
+InvResults$methods(
+  prt_fitout = function()
+  {
+    fit = .self$fit_our$finalresults
+    start.fit = 1
+    end.fit = length(fit)
+    plot(NA, xlim=c(0,10), ylim=c(0,end.fit-start.fit+1), bty='n',
+         xaxt='n', yaxt='n', xlab='', ylab='')
+    text (rep(1,end.fit-start.fit),(end.fit-start.fit):0,fit[start.fit:end.fit], font = 11,
+          adj = 0, cex=0.75)
+  }
+)
+
+
+InvResults$methods(
+  prt_correlation = function()
+  {
+    fit = .self$fit_our$correlation
+    start.fit = 1
+    end.fit = length(fit)
+    plot(NA, xlim=c(0,10), ylim=c(0,end.fit-start.fit+1), bty='n',
+         xaxt='n', yaxt='n', xlab='', ylab='')
+    text (rep(1,end.fit-start.fit),(end.fit-start.fit):0,fit[start.fit:end.fit], font = 11,
+          adj = 0, cex=0.75)
+  }
+)
+
+
+InvResults$methods(
+  prt_init_pars = function()
+  {
+    library(gridExtra)
+    library(grid)
+    pars = .self$init_pars
+    for (par_ in pars)
+    {
+      plot.new()
+      grid.table(par_)
+    }  
+  }  
 )
 
